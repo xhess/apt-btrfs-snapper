@@ -1,2 +1,2 @@
-DPkg::Pre-Install-Pkgs {"/usr/local/bin/apt-btrfs-snapper PRE root";};
-DPkg::Post-Invoke {"/usr/local/bin/apt-btrfs-snapper POST root";}; 
+DPkg::Pre-Install-Pkgs {"apt-btrfs-snapper PRE root";};
+DPkg::Post-Invoke {"apt-btrfs-snapper POST root";}; 
