@@ -1,0 +1,45 @@
+#!/bin/sh
+OPTION=$(echo $1 | awk '{print toupper($0)}')
+CONFIG=$2
+TMPFILE=/tmp/apt-btrfs-snapper-preid
+SNAPPER=/usr/bin/snapper
+
+if [ ! -f $SNAPPER ] ; then exit 0; fi
+
+pre() {
+	rm -f $TMPFILE
+	elms=$(while read elm
+	 do 
+		basename $elm .deb
+	done)
+	elms=$(echo $elms | tr '\n' ' ' | sed -e 's/\ /,\ /g')
+	$SNAPPER -c $CONFIG create -t pre -p -d "Before APT has run! Installing $elms" > $TMPFILE
+}
+
+post() {
+	prenum=""
+	if [ -r $TMPFILE ] ; then
+		prenum="--pre-number "$(cat $TMPFILE)
+	else
+		echo "apt-btrfs-snapper: WARNING! could not determin pre-number!"
+	fi
+	$SNAPPER -c $CONFIG create -t post $prenum -d "After APT"
+	rm -f $TMPFILE
+}
+
+show_help() {
+	echo "apt-btrfs-snapper POST|PRE SNAPPER_CONFIG"
+	exit 0
+}
+if [ -z "$CONFIG" ] ; then show_help; fi
+
+case $OPTION in
+	"PRE")
+		cat - | pre;;
+	"POST")
+		post;;
+	*)
+		show_help;;
+esac
+
+
