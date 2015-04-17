@@ -12,10 +12,10 @@ pre() {
 	 do 
 		basename $elm .deb
 	done)
-	elms=$(echo $elms | tr '\n' ' ' | sed -e 's/\ /;/g')
+	elms=$(echo $elms | tr '\n' ' ' | sed -e 's/\ /=installed,/g'| sed 's/,$//g')
         USERDATA=""
         if [ "$elms" ]; then
-                USERDATA="-u installed=$elms"
+                USERDATA="-u $elms"
 	fi
 	PRENUM=$($SNAPPER -c $CONFIG create -t pre -c number -p -d "Before APT" $USERDATA)
 	echo "Created a pre snapshot with the id $PRENUM"
