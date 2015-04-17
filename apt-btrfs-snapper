@@ -12,18 +12,27 @@ pre() {
 	 do 
 		basename $elm .deb
 	done)
-	elms=$(echo $elms | tr '\n' ' ' | sed -e 's/\ /,\ /g')
-	$SNAPPER -c $CONFIG create -t pre -p -d "Before APT has run! Installing $elms" > $TMPFILE
+	elms=$(echo $elms | tr '\n' ' ' | sed -e 's/\ /;/g')
+        USERDATA=""
+        if [ "$elms" ]; then
+                USERDATA="-u installed=$elms"
+	fi
+	PRENUM=$($SNAPPER -c $CONFIG create -t pre -c number -p -d "Before APT" $USERDATA)
+	echo "Created a pre snapshot with the id $PRENUM"
+	echo $PRENUM > $TMPFILE
 }
 
 post() {
-	prenum=""
+	prenumcmd=""
+	PRENUM=""
 	if [ -r $TMPFILE ] ; then
-		prenum="--pre-number "$(cat $TMPFILE)
+		PRENUM=$(cat $TMPFILE)
+		prenumcmd="--pre-number $PRENUM"
 	else
 		echo "apt-btrfs-snapper: WARNING! could not determin pre-number!"
 	fi
-	$SNAPPER -c $CONFIG create -t post $prenum -d "After APT"
+	POSTNUM=$($SNAPPER -c $CONFIG create -p -t post -c number $prenumcmd -d "After APT")
+	echo "Created a post snapshot with the id $POSTNUM with a reference to $PRENUM"
 	rm -f $TMPFILE
 }
 
