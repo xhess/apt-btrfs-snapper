@@ -7,48 +7,50 @@ SNAPPER=/usr/bin/snapper
 if [ ! -f $SNAPPER ] ; then exit 0; fi
 
 pre() {
-	rm -f $TMPFILE
-	elms=$(while read elm
-	 do 
-		basename $elm .deb
-	done)
-	elms=$(echo $elms | tr '\n' ' ' | sed -e 's/\ /=installed,/g'| sed 's/,$//g')
-        USERDATA=""
-        if [ "$elms" ]; then
-                USERDATA="-u $elms"
-	fi
-	PRENUM=$($SNAPPER -c $CONFIG create -t pre -c number -p -d "Before APT" $USERDATA)
-	echo "Created a pre snapshot with the id $PRENUM"
-	echo $PRENUM > $TMPFILE
+  rm -f $TMPFILE
+  elms=$(while read elm
+   do
+    basename $elm .deb
+  done)
+
+  USERDATA=""
+
+  if [ "$elms" != "" ]; then
+  elms=$(echo $elms | tr '\n' ' ' | sed -e 's/\ /=installed,/g'| sed 's/,$//g')
+  USERDATA="-u $elms"
+  fi
+  PRENUM=$($SNAPPER -c $CONFIG create -t pre -c number -p -d "Before APT" $USERDATA)
+  echo "Created a pre snapshot with the id $PRENUM"
+  echo $PRENUM > $TMPFILE
 }
 
 post() {
-	prenumcmd=""
-	PRENUM=""
-	if [ -r $TMPFILE ] ; then
-		PRENUM=$(cat $TMPFILE)
-		prenumcmd="--pre-number $PRENUM"
-	else
-		echo "apt-btrfs-snapper: WARNING! could not determin pre-number!"
-	fi
-	POSTNUM=$($SNAPPER -c $CONFIG create -p -t post -c number $prenumcmd -d "After APT")
-	echo "Created a post snapshot with the id $POSTNUM with a reference to $PRENUM"
-	rm -f $TMPFILE
+  prenumcmd=""
+  PRENUM=""
+  if [ -r $TMPFILE ] ; then
+    PRENUM=$(cat $TMPFILE)
+    prenumcmd="--pre-number $PRENUM"
+  else
+    echo "apt-btrfs-snapper: WARNING! could not determin pre-number!"
+  fi
+  POSTNUM=$($SNAPPER -c $CONFIG create -p -t post -c number $prenumcmd -d "After APT")
+  echo "Created a post snapshot with the id $POSTNUM with a reference to $PRENUM"
+  rm -f $TMPFILE
 }
 
 show_help() {
-	echo "apt-btrfs-snapper POST|PRE SNAPPER_CONFIG"
-	exit 0
+  echo "apt-btrfs-snapper POST|PRE SNAPPER_CONFIG"
+  exit 0
 }
 if [ -z "$CONFIG" ] ; then show_help; fi
 
 case $OPTION in
-	"PRE")
-		cat - | pre;;
-	"POST")
-		post;;
-	*)
-		show_help;;
+  "PRE")
+    cat - | pre;;
+  "POST")
+    post;;
+  *)
+    show_help;;
 esac
 
 
